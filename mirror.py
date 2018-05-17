@@ -10,53 +10,11 @@ import picamera
 import picamera.array
 from PIL import Image
 import Adafruit_DHT
-from threading import Event, Thread
 
 
-def update_temp():
-    global temperature
-    global humidity
-    temperature_tmp, humidity_tmp = Adafruit_DHT.read_retry(sensor, pin) # updating temparature and humidity
-    temperature = temperature_tmp
-    humidity = humidity_tmp
-
-class TemperatureThread(Thread):
-    def __init__(self):
-        ''' Constructor. '''
-        Thread.__init__(self)
-        update_temp()
- 
-    def run(self):
-        while True:
-            time.sleep(4)
-            update_temp()
-        # for i in range(1, self.val):
-        #     print('Value %d in thread %s' % (i, self.getName()))
- 
-        #     # Sleep for random time between 1 ~ 3 second
-        #     secondsToSleep = randint(1, 5)
-        #     print('%s sleeping fo %d seconds...' % (self.getName(), secondsToSleep))
-        #     time.sleep(secondsToSleep)
-
-
-# thread
-def call_repeatedly(interval, func, *args):
-  stopped = Event()
-  def loop():
-      while not stopped.wait(interval): # the first call is in `interval` secs
-          func(*args)
-  Thread(target=loop).start()
-  return stopped.set
-
-  # global
-temperature = 0
-humidity = 0
-
-
-# date and time
-date = datetime.datetime.now()
-format = "%d/%m/%Y %H:%M:%S"
-font = cv2.FONT_HERSHEY_SIMPLEX
+# date and time format, font
+format = '%d/%m/%Y %H:%M'
+font = cv2.FONT_HERSHEY_DUPLEX
 
 # temperature and humidity
 sensor = Adafruit_DHT.DHT11
@@ -92,27 +50,17 @@ with picamera.PiCamera() as camera:
     new_overlay.fullscreen = overlay_fullscreen
     new_overlay.window = overlay_window
 
-    # thread
-    # update_temp()
-    myThreadOb1 = TemperatureThread()
-    myThreadOb1.setName('Thread temperature')
- 
-    # Start running the threads!
-    myThreadOb1.start()
-    # call_repeatedly(2, update_temp)
-    # threading.Timer(2.0, update_temp).start()
-
     try:
         # Wait indefinitely until the user terminates the script
         while True:
-            time.sleep(1)
             date = datetime.datetime.now() # updating time and date
 
             # adding date and time to img
             img = np.zeros((overlay_height, overlay_width, 3), dtype=np.uint8)
+            temperature, humidity = Adafruit_DHT.read_retry(sensor, pin) # updating temparature and humidity
             cv2.putText(
                 img,
-                date.strftime(format) + ' Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(temperature, humidity),
+                date.strftime(format) + ' Temp={0:0.1f}*C'.format(temperature),
                 (20,overlay_height/2 + 5),
                 font,
                 1,
@@ -132,6 +80,7 @@ with picamera.PiCamera() as camera:
             old_overlay = new_overlay
             new_overlay = old_overlay
 
+            time.sleep(10)
 
     finally:
         camera.remove_overlay(old_overlay)
