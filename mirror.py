@@ -3,6 +3,7 @@
 
 import datetime
 import time
+from detect_night import *
 import numpy as np
 import cv2
 from screeninfo import get_monitors
@@ -20,6 +21,9 @@ font = cv2.FONT_HERSHEY_DUPLEX
 sensor = Adafruit_DHT.DHT11
 pin = 26
 temp_count = 0
+
+# led
+gpio_led_id = 13
 
 # get screen size
 monitor = get_monitors()[0]
@@ -49,6 +53,10 @@ with picamera.PiCamera() as camera:
     new_overlay = camera.add_overlay(np.getbuffer(img), layer=3, alpha=255, size=(overlay_width, overlay_height))
     new_overlay.fullscreen = overlay_fullscreen
     new_overlay.window = overlay_window
+
+    night_detect = NightDetectionThread(camera, width, height, 
+        gpio_led_id)
+    night_detect.start()
 
     try:
         # Wait indefinitely until the user terminates the script
