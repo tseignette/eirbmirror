@@ -32,8 +32,6 @@ temp_count = 0
 monitor = get_monitors()[0]
 width = monitor.width
 height = monitor.height
-# width = monitor.width
-# height = monitor.height
 overlay_width = monitor.width
 overlay_height = 64
 overlay_fullscreen = False
@@ -47,9 +45,10 @@ framerate = 60
 
 with picamera.PiCamera() as camera:
     # starting camera
+    camera.vflip = True
     camera.resolution = (height, width)
     camera.framerate = framerate
-    camera.start_preview(rotation=90, layer=0)
+    camera.start_preview(rotation=270, layer=0)
 
     # night detection
     night_detect = NightDetectionThread(camera, width, height)
