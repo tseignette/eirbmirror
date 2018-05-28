@@ -16,23 +16,8 @@ import time
 
 
 # ==================================================================================================
-# PRIVATE FUNCTIONS
-# ==================================================================================================
-
-def turn_ir_led_on():
-    GPIO.output(config.ir_led_gpio, True)
-
-def turn_ir_led_off():
-    GPIO.output(config.ir_led_gpio, False)
-
-
-# ==================================================================================================
 # SETUP
 # ==================================================================================================
-
-# GPIO setup
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(config.ir_led_gpio, GPIO.OUT)
 
 # date and time format, font
 format = '%d/%m/%Y %H:%M'
@@ -43,13 +28,12 @@ sensor = Adafruit_DHT.DHT11
 pin = 26
 temp_count = 0
 
-# led
-gpio_led_id = 13
-
 # get screen size
 monitor = get_monitors()[0]
-width = 1600
-height = 900
+width = monitor.width
+height = monitor.height
+# width = monitor.width
+# height = monitor.height
 overlay_width = monitor.width
 overlay_height = 64
 overlay_fullscreen = False
@@ -63,9 +47,13 @@ framerate = 60
 
 with picamera.PiCamera() as camera:
     # starting camera
-    camera.resolution = (width, height)
+    camera.resolution = (height, width)
     camera.framerate = framerate
-    camera.start_preview()
+    camera.start_preview(rotation=90, layer=0)
+
+    # night detection
+    night_detect = NightDetectionThread(camera, width, height)
+    night_detect.start()
 
     # adding first overlay
     img = np.zeros((overlay_height, overlay_width, 3), dtype=np.uint8)
@@ -78,10 +66,6 @@ with picamera.PiCamera() as camera:
     new_overlay.fullscreen = overlay_fullscreen
     new_overlay.window = overlay_window
 
-    night_detect = NightDetectionThread(camera, width, height, 
-        gpio_led_id)
-    night_detect.start()
-
     try:
         # Wait indefinitely until the user terminates the script
         while True:
@@ -92,11 +76,14 @@ with picamera.PiCamera() as camera:
             temperature, humidity = Adafruit_DHT.read_retry(sensor, pin) # updating temparature and humidity
             cv2.putText(
                 img,
-                date.strftime(format) + ' Temp={0:0.1f}*C'.format(temperature),
-                (20,overlay_height/2 + 5),
+                date.strftime(format)
+                    + ' Temperature : {0:0.1f}*C'.format(temperature)
+                    + ' Humidity : {0:0.1f}%'.format(humidity),
+                (20, overlay_height/2 + 5),
                 font,
                 1,
-                (255, 255, 255))
+                (255, 255, 255)
+            )
 
             new_overlay = camera.add_overlay(
                 np.getbuffer(img),
@@ -112,7 +99,7 @@ with picamera.PiCamera() as camera:
             old_overlay = new_overlay
             new_overlay = old_overlay
 
-            time.sleep(10)
+            time.sleep(8)
 
     finally:
         camera.remove_overlay(old_overlay)
