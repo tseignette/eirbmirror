@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import Adafruit_DHT
-import config
 import cv2
 import datetime
 from detect_night import *

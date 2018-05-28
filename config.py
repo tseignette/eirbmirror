@@ -1,1 +1,0 @@
-ir_led_gpio = 19 # GPIO on which IR LEds are connected
