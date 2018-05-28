@@ -99,7 +99,7 @@ with picamera.PiCamera() as camera:
             old_overlay = new_overlay
             new_overlay = old_overlay
 
-            time.sleep(8)
+            time.sleep(60)
 
     finally:
         camera.remove_overlay(old_overlay)
