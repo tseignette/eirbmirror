@@ -1,16 +1,37 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
-import datetime
-import time
-import numpy as np
+import Adafruit_DHT
+import config
 import cv2
-from screeninfo import get_monitors
+import datetime
+import numpy as np
 import picamera
 import picamera.array
 from PIL import Image
-import Adafruit_DHT
+import RPi.GPIO as GPIO
+from screeninfo import get_monitors
+import time
 
+
+# ==================================================================================================
+# PRIVATE FUNCTIONS
+# ==================================================================================================
+
+def turn_ir_led_on():
+    GPIO.output(config.ir_led_gpio, True)
+
+def turn_ir_led_off():
+    GPIO.output(config.ir_led_gpio, False)
+
+
+# ==================================================================================================
+# SETUP
+# ==================================================================================================
+
+# GPIO setup
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(config.ir_led_gpio, GPIO.OUT)
 
 # date and time format, font
 format = '%d/%m/%Y %H:%M'
@@ -32,7 +53,10 @@ overlay_window = (0, 0, overlay_width, overlay_height)
 framerate = 60
 
 
-# main loop
+# ==================================================================================================
+# MAIN LOOP
+# ==================================================================================================
+
 with picamera.PiCamera() as camera:
     # starting camera
     camera.resolution = (width, height)

@@ -1,0 +1,1 @@
+ir_led_gpio = 4 # GPIO on which IR LEds are connected
